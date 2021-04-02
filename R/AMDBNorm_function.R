@@ -1,0 +1,92 @@
+##' @title  Eliminating batch effects of the gene expression datasets.
+#
+#' @description  Eliminating batch effects of the gene expression datasets.
+#' @param data An expression matrix with gene in row and sample in column.
+#' @param ref_batch An expression matrix with gene in row and sample in column.
+#' @param fit  A curve fitting function output by the function (\code{\link[DBNorm]{polyFit}}, \code{\link[DBNorm]{fourierFit}} and \code{\link[DBNorm]{gaussianFit}}).
+#' @param thread A logical value. You would choose whether to turn on multithreading to reduce the running time. The default is thread = FALSE.
+#' @seealso  \code{\link[DBNorm]{genDistData}}, \code{\link[DBNorm]{conNormalizer}}
+#' @export
+#' @author Feng qiao
+#' @return An expression matrix with gene in row and sample in column.
+#' @examples
+#'  #Loading build-in datasets
+#'  #These test datasets are part of the real datasets, including
+#'  #three batches of samples(‘Batch_1’, ‘Batch_2’, ‘Batch_3’, ‘Group_1’, ‘Group_2’, ‘Group_3’).
+#'  data(Test_data)
+#'  library('DBNorm')
+#'  library('reshape2')
+#'  Batch_1[1:4,1:4]#Reference Batch
+#'  #Defining reference distribution.
+#'  dis <- genDistData(melt(Batch_1)[,3], 500)
+#'  # Visualising distribution datasets.
+#'  visDistData(dis, "P", "Reference distribution", "Range", "Probability")
+#'  # Using POLT function to fit reference distribution.
+#'  fit <- polyFit(dis,9)# Visualising fitting results
+#'  visFitting(fit, "Reference distribution", "Range", "Probability")
+#'  #Batch correcting using AMDBNorm.
+#'  AMDB_Batch_2 <- AMDBNorm(data = Batch_2,ref_batch = Batch_1,fit = fit)
+#'  AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_batch = Batch_1,fit = fit)
+#'  #AMDB_Batch_2 <- AMDBNorm(data = Batch_2,ref_Batch = Batch_1,fit = fit,thread = TRUE)
+#'  #AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_Batch = Batch_1,fit = fit,thread = TRUE)
+#'  #Application of AMDBNorm in unbalanced experimental design.
+#'  #It is assumed that the experimental design has two biological conditions: normal (N) and tumor (T).
+#'  # Defining reference distributions.
+#'  dis_N <- genDistData(melt(Batch_1[,Group_1=='normal'])[,3], 500)
+#'  dis_T <- genDistData(melt(Batch_1[,Group_1=='tumor'])[,3], 500)
+#'  # Visualising reference distributions
+#'  visDistData(dis_N, "P", "Reference distribution (N)", "Range", "Probability")
+#'  visDistData(dis_T, "P", "Reference distribution (T)", "Range", "Probability")
+#'  # Using POLT function to fit reference distributions
+#'  fit_N <- polyFit(dis_N,9);fit_T <- polyFit(dis_T,9)
+#'  #Batch correcting using AMDBNorm.
+#'  AMDB_Batch_3N <- AMDBNorm(data = Batch_3[,Group_3=='normal'],
+#'                   ref_batch = Batch_1[,Group_1=='normal'], fit = fit_N)
+#'  AMDB_Batch_3T <- AMDBNorm(data = Batch_3[,Group_3=='tumor'],
+#'                   ref_batch = Batch_1[,Group_1=='tumor'], fit = fit_T)
+#'  #Result of Batch correction of Batch 2.
+#'  AMDB_Batch_3 <- cbind(AMDB_Batch_3N,AMDB_Batch_3T)
+#'  Group_A3 <- c(rep('normal',ncol(AMDB_Batch_3N)),
+#'                rep('tumor',ncol(AMDB_Batch_3T)))
+#'  #Batch correction result########
+#'  AMDB_Batch1_2_3 <- cbind(AMDB_Batch_1,AMDB_Batch_2,AMDB_Batch_3)
+#'  AMDB_Batch1_2_3[1:4,1:4]
+#'  boxplot(AMDB_Batch1_2_3)
+#'
+#'  Group <- c(Group_1,Group_2,Group_A3)
+#'  whichBatch <- c(rep('Batch_1',ncol(Batch_1)),rep('Batch_2',ncol(Batch_2)),
+#'                      rep('Batch_3',ncol(Batch_3)))
+
+AMDBNorm <- function(data,ref_batch,fit,thread=FALSE){
+  #step1:Distribution alignment.
+  #library('DBNorm')
+  data <- as.matrix(data)
+  if (thread==FALSE) {  DBNormOut<- matrix(0,nrow(data),ncol(data))
+  for (i in 1:ncol(data)) {DBdata = DBNorm::genDistData(data[,i], 500)
+  DArray = DBNorm::conNormalizer(DBdata, fit)
+  DBNormOut[,i]<-base::unlist(DArray)
+    }
+  }
+  if (thread==TRUE) {
+  future::plan("multisession") ## Run in parallel on local computer
+    res <- future.apply::future_lapply(1:ncol(data),function(i){
+      DBdata = DBNorm::genDistData(data[,i], 500)
+      DArray = DBNorm::conNormalizer(DBdata, fit)
+    })
+    DBNormOut <- do.call(data.frame,res)
+  }
+  #step2:adjusting mean.
+  ref_batch_mean <- apply(ref_batch,1, mean)
+  DBNormOut <- as.data.frame(t(DBNormOut))
+  AMDBNormOut <- matrix(0,nrow(data),ncol(data))
+  for (i in 1:nrow(AMDBNormOut)) {
+    ref_batch_gmean <- ref_batch_mean[i]
+    DBout_mean <- mean(DBNormOut[,i])
+    diff <- ref_batch_gmean - DBout_mean
+    AMDBNormOut[i,] <-as.matrix(DBNormOut[,i] + diff )
+  }
+  rownames(AMDBNormOut) <- rownames(data)
+  colnames(AMDBNormOut) <- colnames(data)
+ return(AMDBNormOut)
+
+}
