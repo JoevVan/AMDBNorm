@@ -23,10 +23,11 @@ library('reshape2')
 
 install.package("future.apply")
 
-# Loading build-in datasets
-#These test datasets are part of the real datasets, including three batches of samples(‘Batch_1’, ‘Batch_2’, ‘Batch_3’, ‘Group_1’, ‘Group_2’, ‘Group_3’).
+Note：If the installation fails, please update r to the latest version.
 
-data(Test_data)
+# Loading build-in datasets
+
+data(Test_data)#These test datasets are part of the real datasets, including three batches of samples(‘Batch_1’, ‘Batch_2’, ‘Batch_3’, ‘Group_1’, ‘Group_2’, ‘Group_3’).
 # Define reference distribution
 Batch_1[1:4,1:4]#Reference Batch
 
@@ -46,12 +47,12 @@ AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_batch = Batch_1,fit = fit)
 
 #AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_Batch = Batch_1,fit = fit,thread = TRUE)
 # Application of AMDBNorm in unbalanced experimental design.
-#Suppose the experimental design has two biological conditions: normal(N) and tumor(T)
+It is assumed that the experimental design has two biological conditions: normal (n) and tumor (T)
 # Define reference distributions
 dis_N <- genDistData(melt(Batch_1[,Group_1=='normal'])[,3], 500)
 
 dis_T <- genDistData(melt(Batch_1[,Group_1=='tumor'])[,3], 500)
-# visualising reference distributions
+# Visualising reference distributions
 visDistData(dis_N, "P", "Reference distribution (N)", "Range", "Probability")
 
 visDistData(dis_T, "P", "Reference distribution (T)", "Range", "Probability")
