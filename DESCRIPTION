@@ -1,0 +1,18 @@
+Package: AMDBNorm
+Type: Package
+Title: AMDBNorm: An approach based on distribution adjustment to eliminate batch effects of gene expression data
+Version: 0.1.0
+Depends: R (>= 3.5.0)
+Imports:
+    DBNorm,
+    future.apply,
+    future,
+    reshape2,
+Remotes: mengqinxue/DBNorm
+Author: Feng Qiao, Xu Zhang
+Maintainer: Feng Qiao <qf825558341@email.swu.edu.cn>
+Description: This is a new algorithm, adjustment mean DBNorm (AMDBNorm), which is based on a probability distribution to correct batch effects while preserving biological variation. We expect that AMDBNorm will improve statistical analysis ability for some rare diseases and help with disease prediction, new subtype discovery and biomarker researches.
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
