@@ -28,7 +28,7 @@ Note：If the installation fails, please update r to the latest version.
 # Loading build-in datasets
 
 data(Test_data)#These test datasets are part of the real datasets, including three batches of samples(‘Batch_1’, ‘Batch_2’, ‘Batch_3’, ‘Group_1’, ‘Group_2’, ‘Group_3’).
-# Define reference distribution
+# Defining reference distribution
 Batch_1[1:4,1:4]#Reference Batch
 
 dis <- genDistData(melt(Batch_1)[,3], 500)
@@ -38,7 +38,7 @@ visDistData(dis, "P", "Reference distribution", "Range", "Probability")
 fit <- polyFit(dis,9)# Visualising fitting results
 
 visFitting(fit, "Reference distribution", "Range", "Probability")
-# Batch correction using AMDBNorm.
+# Batch correcting using AMDBNorm.
 AMDB_Batch_2 <- AMDBNorm(data = Batch_2,ref_batch = Batch_1,fit = fit)
 
 AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_batch = Batch_1,fit = fit)
@@ -48,7 +48,7 @@ AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_batch = Batch_1,fit = fit)
 #AMDB_Batch_1 <- AMDBNorm(data = Batch_1,ref_Batch = Batch_1,fit = fit,thread = TRUE)
 # Application of AMDBNorm in unbalanced experimental design.
 It is assumed that the experimental design has two biological conditions: normal (n) and tumor (T)
-# Define reference distributions
+# Defining reference distributions
 dis_N <- genDistData(melt(Batch_1[,Group_1=='normal'])[,3], 500)
 
 dis_T <- genDistData(melt(Batch_1[,Group_1=='tumor'])[,3], 500)
@@ -60,7 +60,7 @@ visDistData(dis_T, "P", "Reference distribution (T)", "Range", "Probability")
 fit_N <- polyFit(dis_N,9)
 
 fit_T <- polyFit(dis_T,9)
-# Batch correction using AMDBNorm.
+# Batch correcting using AMDBNorm.
 AMDB_Batch_3N <- AMDBNorm(data = Batch_3[,Group_3=='normal'],
                           ref_batch = Batch_1[,Group_1=='normal'], fit = fit_N)
                           
